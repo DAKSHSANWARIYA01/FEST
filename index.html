@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FEST | Intellectual Hub</title>
+    <!-- 🌟 FONT AWESOME FOR MAXIMUM COMPATIBILITY -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 🎨 LIGHT THEME VARIABLES */
+        :root {
+            --bg-color: #f8fafc; 
+            --card-bg: #ffffff; 
+            --card-border: rgba(0, 0, 0, 0.05);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --accent-blue: #0284c7; 
+            --accent-purple: #7c3aed; 
+            --input-bg: #f1f5f9;
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ⏳ SPLASH SCREEN STYLE */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.4s ease, visibility 0.4s;
+        }
+        
+        .splash-icon {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+        }
+
+        /* 📦 MAIN CONTAINER */
+        .container {
+            width: 90%;
+            max-width: 360px;
+            padding: 32px 24px;
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.98);
+            transition: all 0.4s ease-out;
+            box-sizing: border-box;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+        .container.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .app-icon {
+            width: 75px;
+            height: 75px;
+            object-fit: contain;
+            margin-bottom: 12px;
+        }
+        
+        h1 {
+            font-size: 40px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1.5px; 
+            margin: 0 0 4px 0;
+            color: var(--text-main);
+        }
+        
+        .desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 32px;
+            letter-spacing: 0.1px;
+            line-height: 1.4;
+        }
+
+        /* 📝 INPUTS & FORM LAYOUTS */
+        .form-group {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+        }
+        .form-group.active {
+            display: flex;
+        }
+
+        .input-field {
+            padding: 14px;
+            background-color: var(--input-bg);
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-main);
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .input-field:focus {
+            border-color: var(--accent-blue);
+            background-color: #ffffff;
+            outline: none;
+        }
+
+        /* ⚡ BUTTON SYSTEM */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            font-weight: 600;
+            box-sizing: border-box;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        
+        .btn-primary { 
+            background-color: #111111; 
+            color: #ffffff;
+        }
+        .btn-secondary { 
+            background-color: transparent; 
+            color: var(--text-main); 
+            border: 1px solid rgba(0,0,0,0.08); 
+        }
+
+        .link-helper {
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            align-self: flex-end;
+            margin-bottom: 4px;
+        }
+        .link-helper:hover { color: var(--text-main); }
+
+        /* 🏢 DASHBOARD & ROOM SYSTEM */
+        #dashboard-view, #room-inside-view {
+            display: none;
+            text-align: left;
+            width: 100%;
+        }
+        #dashboard-view.active, #room-inside-view.active {
+            display: block;
+        }
+        
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .dash-header h2 { font-size: 15px; margin: 0; font-weight: 600; }
+
+        .section-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 20px 0 10px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .rooms-list { display: flex; flex-direction: column; gap: 10px; }
+        
+        .room-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px;
+            border-radius: 10px;
+            background-color: #f8fafc;
+            border: 1px solid var(--card-border);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .room-card:hover { background-color: #f1f5f9; }
+        .room-meta { display: flex; align-items: center; gap: 12px; }
+        .room-title { font-size: 14px; font-weight: 500; }
+        .room-tag { font-size: 11px; color: var(--text-muted); }
+
+        /* 💬 REALTIME CHAT SYSTEM */
+        .sub-rooms-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
+        .tab-btn {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--card-border);
+            background-color: transparent;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .tab-btn.active { background-color: var(--text-main); color: #fff; border-color: var(--text-main); }
+
+        .chat-box {
+            height: 240px;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            background-color: #f8fafc;
+            padding: 12px;
+            overflow-y: auto;
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg { font-size: 13px; line-height: 1.4; }
+        .msg-user { font-weight: 600; color: var(--accent-blue); }
+        .msg-text { color: var(--text-main); margin-left: 4px; }
+        
+        .file-link-card {
+            margin-top: 6px;
+            padding: 10px;
+            background: rgba(0,0,0,0.02);
+            border: 1px dashed var(--card-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+        }
+        .file-link-card a { color: var(--accent-blue); text-decoration: none; }
+
+        .chat-input-container { display: flex; gap: 6px; align-items: center; }
+        .chat-input-container input { flex-grow: 1; }
+        
+        .icon-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            box-sizing: border-box;
+        }
+        .icon-btn:hover { color: var(--text-main); }
+        .icon-btn i { font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <img src="1-1.png" class="splash-icon" alt="Fest Logo" onerror="this.style.display='none'">
+        <h1 style="font-size:32px; margin-top:12px;">FEST</h1>
+    </div>
+
+    <div class="container" id="auth-container">
+        <!-- AUTH INTERFACE -->
+        <div id="auth-view">
+            <img src="1-1.png" class="app-icon" alt="Fest Logo" onerror="this.style.display='none'">
+            <h1>FEST</h1>
+            <p class="desc">Intellectual Hub.</p>
+            
+            <div class="btn-group" id="initial-buttons">
+                <button class="btn btn-primary" onclick="showForm('login')">Sign In</button>
+                <button class="btn btn-secondary" onclick="showForm('signup')">Create Account</button>
+            </div>
+
+            <!-- LOGIN -->
+            <div class="form-group" id="login-form">
+                <input type="email" id="login-email" class="input-field" placeholder="Email Address">
+                <input type="password" id="login-password" class="input-field" placeholder="Password">
+                <span class="link-helper" id="btn-forgot-password">Forgot Password?</span>
+                <button class="btn btn-primary" id="btn-submit-login">Sign In</button>
+                <button class="btn btn-secondary" onclick="goBack()">Back</button>
+            </div>
+
+            <!-- SIGNUP -->
+            <div class="form-group" id="signup-form">
+                <input type="text" id="signup-name" class="input-field" placeholder="Full Name">
+                <input type="text" id="signup-expertise" class="input-field" placeholder="Bio / Status (e.g., Student, Designer)">
+                <input type="email" id="signup-email" class="input-field" placeholder="Email">
+                <input type="tel" id="signup-phone" class="input-field" placeholder="Phone Number">
+                <input type="password" id="signup-password" class="input-field" placeholder="Password">
+                <button class="btn btn-primary" id="btn-submit-signup">Create Account</button>
+                <button class="btn btn-secondary" onclick="goBack()">Back</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD HUB -->
+        <div id="dashboard-view">
+            <div class="dash-header">
+                <h2 id="welcome-message">Dashboard</h2>
+                <i class="fa-solid fa-sign-out-alt" id="btn-logout" style="color: var(--text-muted); cursor: pointer; font-size: 18px;" title="Logout"></i>
+            </div>
+            
+            <div class="section-tag">Core Hubs</div>
+            <div class="rooms-list">
+                <div class="room-card" onclick="openRoom('Innovation Lab', ['#tech-trends', '#creatives', '#resources'])">
+                    <div class="room-meta">
+                        <i class="fa-solid fa-lightbulb" style="color: var(--accent-blue); width: 20px;"></i>
+                        <span class="room-title">Innovation Lab</span>
+                    </div>
+                    <span class="room-tag">General</span>
+                </div>
+                
+                <div class="room-card" onclick="openRoom('Strategy & Ideas', ['#discussions', '#insights', '#networking'])">
+                    <div class="room-meta">
+                        <i class="fa-solid fa-compass" style="color: var(--accent-purple); width: 20px;"></i>
+                        <span class="room-title">Strategy & Ideas</span>
+                    </div>
+                    <span class="room-tag">Community</span>
+                </div>
+            </div>
+
+            <div class="section-tag">Regional & Social</div>
+            <div class="rooms-list">
+                <div class="room-card" onclick="openRoom('Locality Hub', ['#general', '#local-updates'])">
+                    <div class="room-meta">
+                        <i class="fa-solid fa-map-marker-alt" style="color: #34d399; width: 20px;"></i>
+                        <span class="room-title">Locality Hub</span>
+                    </div>
+                    <span class="room-tag">Local</span>
+                </div>
+                <div class="room-card" onclick="openRoom('National Exchange', ['#trends', '#meetups'])">
+                    <div class="room-meta">
+                        <i class="fa-solid fa-globe" style="color: #fbbf24; width: 20px;"></i>
+                        <span class="room-title">National Exchange</span>
+                    </div>
+                    <span class="room-tag">Country</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSIDE ROOM CHAT -->
+        <div id="room-inside-view">
+            <div class="dash-header">
+                <h2 id="current-room-title">Room</h2>
+                <i class="fa-solid fa-chevron-left" onclick="backToDashboard()" style="color: var(--text-muted); cursor: pointer; font-size: 18px;"></i>
+            </div>
+
+            <div class="sub-rooms-tabs" id="sub-rooms-container"></div>
+
+            <div class="chat-box" id="chat-box-messages">
+                <div class="msg"><span class="msg-user">System:</span><span class="msg-text">Secure connection established.</span></div>
+            </div>
+
+            <div class="chat-input-container">
+                <button class="icon-btn" title="Share Link/File" onclick="shareLargeCloudFile()">
+                    <i class="fa-solid fa-paperclip"></i>
+                </button>
+                
+                <input type="text" id="chat-input-message" class="input-field" placeholder="Type a message...">
+                
+                <button class="icon-btn" title="Ask Fest AI" onclick="triggerAIAssistant()" style="color: var(--accent-blue);">
+                    <i class="fa-solid fa-robot"></i>
+                </button>
+                
+                <button class="icon-btn" style="background-color: var(--text-main); color: #fff;" onclick="sendMessage()">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI NAVIGATION SCRIPT -->
+    <script>
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            const authContainer = document.getElementById('auth-container');
+            if(splash) { 
+                splash.style.opacity = '0'; 
+                splash.style.visibility = 'hidden'; 
+            }
+            if(authContainer) {
+                authContainer.classList.add('show');
+            }
+        }, 1500);
+
+        function showForm(formType) {
+            document.getElementById('initial-buttons').style.display = 'none';
+            document.querySelector('#auth-view h1').style.display = 'none';
+            document.querySelector('#auth-view .desc').style.display = 'none';
+            if (formType === 'login') document.getElementById('login-form').classList.add('active');
+            else if (formType === 'signup') document.getElementById('signup-form').classList.add('active');
+        }
+
+        function goBack() {
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('signup-form').classList.remove('active');
+            document.getElementById('initial-buttons').style.display = 'flex';
+            document.querySelector('#auth-view h1').style.display = 'block';
+            document.querySelector('#auth-view .desc').style.display = 'block';
+        }
+    </script>
+
+    <!-- FIREBASE & CORE ENGINE SCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYvM7aPoFbueGWyv8mbrRtMTErRgIPTnI",
+            authDomain: "festapp-7f7ca.firebaseapp.com",
+            projectId: "festapp-7f7ca",
+            storageBucket: "festapp-7f7ca.firebasestorage.app",
+            messagingSenderId: "838055073635",
+            appId: "1:838055073635:web:cf271352c25851b2cbe556"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUserData = { name: '', expertise: '' };
+        let activeRoom = '';
+        let activeChannel = '';
+        let unsubscribeMessages = null;
+
+        function loadDashboard(name, expertise) {
+            document.getElementById('auth-view').style.display = 'none';
+            document.getElementById('dashboard-view').classList.add('active');
+            currentUserData.name = name || 'User';
+            currentUserData.expertise = expertise || '';
+            
+            if(name) {
+                const displayExpertise = expertise ? ` (${expertise})` : '';
+                document.getElementById('welcome-message').innerText = `${name}${displayExpertise}`;
+            }
+        }
+
+        function loadAuthScreen() {
+            document.getElementById('dashboard-view').classList.remove('active');
+            document.getElementById('room-inside-view').classList.remove('active');
+            document.getElementById('auth-view').style.display = 'block';
+            goBack();
+        }
+
+        window.openRoom = function(roomName, subRooms) {
+            document.getElementById('dashboard-view').classList.remove('active');
+            document.getElementById('room-inside-view').classList.add('active');
+            document.getElementById('current-room-title').innerText = roomName;
+            activeRoom = roomName;
+
+            const tabsContainer = document.getElementById('sub-rooms-container');
+            tabsContainer.innerHTML = '';
+
+            subRooms.forEach((sub, index) => {
+                const btn = document.createElement('button');
+                btn.className = `tab-btn ${index === 0 ? 'active' : ''}`;
+                btn.innerText = sub;
+                
+                if(index === 0) switchChannel(sub);
+
+                btn.onclick = function() {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    switchChannel(sub);
+                };
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        function switchChannel(channelName) {
+            activeChannel = channelName;
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            const chatBox = document.getElementById('chat-box-messages');
+            chatBox.innerHTML = `<div class="msg"><span class="msg-user">System:</span><span class="msg-text">Connecting...</span></div>`;
+
+            const q = query(
+                collection(db, "rooms", activeRoom, activeChannel),
+                orderBy("timestamp", "asc")
+            );
+
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                chatBox.innerHTML = '';
+                if(snapshot.empty) {
+                    chatBox.innerHTML = `<div class="msg"><span class="msg-user">System:</span><span class="msg-text">No messages yet. Say hello!</span></div>`;
+                }
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'msg';
+                    
+                    if(data.isLargeFile) {
+                        msgDiv.innerHTML = `
+                            <span class="msg-user"><strong>${data.sender}</strong>:</span>
+                            <div class="file-link-card">
+                                <i class="fa-solid fa-link" style="color:var(--accent-blue)"></i>
+                                <div>
+                                    <a href="${data.text}" target="_blank">Shared Resource Link <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i></a>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        msgDiv.innerHTML = `<span class="msg-user"><strong>${data.sender}</strong>:</span><span class="msg-text">${data.text}</span>`;
+                    }
+                    chatBox.appendChild(msgDiv);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        window.sendMessage = function() {
+            const input = document.getElementById('chat-input-message');
+            const text = input.value.trim();
+            if(!text || !activeRoom || !activeChannel) return;
+
+            addDoc(collection(db, "rooms", activeRoom, activeChannel), {
+                sender: currentUserData.name,
+                title: currentUserData.expertise || 'Member',
+                text: text,
+                isLargeFile: false,
+                timestamp: new Date()
+            }).then(() => {
+                input.value = '';
+            }).catch(err => alert("Error: " + err.message));
+        }
+
+        window.shareLargeCloudFile = function() {
+            const url = prompt("Paste your cloud file or resource link here:");
+            if(url && url.trim().startsWith('http')) {
+                addDoc(collection(db, "rooms", activeRoom, activeChannel), {
+                    sender: currentUserData.name,
+                    title: currentUserData.expertise || 'Member',
+                    text: url.trim(),
+                    isLargeFile: true,
+                    timestamp: new Date()
+                }).catch(err => alert("Error: " + err.message));
+            } else if(url) {
+                alert("Please enter a valid link.");
+            }
+        }
+
+        window.backToDashboard = function() {
+            if (unsubscribeMessages) unsubscribeMessages();
+            document.getElementById('room-inside-view').classList.remove('active');
+            document.getElementById('dashboard-view').classList.add('active');
+        }
+
+        async function askFestAI(userMessage, roomName) {
+            const GEMINI_API_KEY = "AQ.Ab8RN6I4mTTuEpxM8jcECvBEgTVbnu858SaaCu06LMxygzhX6A"; 
+            const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const systemInstruction = `You are 'Fest AI'. Keep your tone helpful, straightforward, balanced, and friendly. Be clear and concise.`;
+
+            try {
+                const response = await fetch(URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userMessage }] }],
+                        systemInstruction: { parts: [{ text: systemInstruction }] },
+                        generationConfig: { maxOutputTokens: 200, temperature: 0.4 }
+                    })
+                });
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error("AI Error:", error);
+                return "System Message: AI is currently unavailable. Please try again later.";
+            }
+        }
+
+        window.triggerAIAssistant = async function() {
+            if(!activeRoom || !activeChannel) return alert("Please enter a room first.");
+            const input = document.getElementById('chat-input-message');
+            const userText = input.value.trim();
+            if(!userText) return alert("Type something for Fest AI to answer.");
+
+            const chatBox = document.getElementById('chat-box-messages');
+            const loaderDiv = document.createElement('div');
+            loaderDiv.className = 'msg';
+            loaderDiv.id = 'ai-loader-msg';
+            loaderDiv.innerHTML = `<span class="msg-user" style="color:var(--accent-blue)">Fest AI:</span><span class="msg-text">Thinking...</span>`;
+            chatBox.appendChild(loaderDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            input.value = '';
+
+            const aiResponse = await askFestAI(userText, activeRoom);
+            const loaderElement = document.getElementById('ai-loader-msg');
+            if (loaderElement) loaderElement.remove();
+            
+            addDoc(collection(db, "rooms", activeRoom, activeChannel), {
+                sender: "Fest AI",
+                title: "Assistant",
+                text: aiResponse,
+                isLargeFile: false,
+                timestamp: new Date()
+            }).catch(err => console.error("Firestore AI Error:", err));
+        }
+
+        // VALIDATION & ACCOUNT HANDLERS
+        document.getElementById('btn-submit-signup').addEventListener('click', () => {
+            const name = document.getElementById('signup-name').value.trim();
+            const expertise = document.getElementById('signup-expertise').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const phone = document.getElementById('signup-phone').value.trim();
+            const password = document.getElementById('signup-password').value;
+
+            if(!email || !password || !name) return alert('Please fill in the required fields.');
+
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    setDoc(doc(db, "users", userCredential.user.uid), { 
+                        fullName: name, 
+                        expertise: expertise, 
+                        email: email, 
+                        mobileNumber: phone 
+                    }).then(() => loadDashboard(name, expertise));
+                }).catch((error) => {
+                    if (error.code === 'auth/email-already-in-use') {
+                        alert('यह ईमेल आईडी पहले से रजिस्टर्ड है! कृपया Sign In करें या दूसरा ईमेल इस्तेमाल करें।');
+                    } else if (error.code === 'auth/weak-password') {
+                        alert('पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।');
+                    } else {
+                        alert(error.message);
+                    }
+                });
+        });
+
+        document.getElementById('btn-submit-login').addEventListener('click', () => {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if(!email || !password) return alert('Please fill in all fields.');
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    getDoc(doc(db, "users", userCredential.user.uid)).then((docSnap) => {
+                        if(docSnap.exists()){
+                            loadDashboard(docSnap.data().fullName, docSnap.data().expertise);
+                        } else {
+                            loadDashboard('', '');
+                        }
+                    });
+                }).catch((error) => {
+                    if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                        alert('गलत ईमेल या पासवर्ड! कृपया दोबारा चेक करें या नया अकाउंट बनाएं।');
+                    } else {
+                        alert(error.message);
+                    }
+                });
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            signOut(auth).then(() => loadAuthScreen());
+        });
+    </script>
+</body>
+  </html>
