@@ -451,6 +451,13 @@
         let activeChannel = '';
         let unsubscribeMessages = null;
 
+        // Add Enter Key listener to send messages without clicking buttons manually
+        document.getElementById('chat-input-message').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
         function loadDashboard(name, expertise) {
             document.getElementById('auth-view').style.display = 'none';
             document.getElementById('dashboard-view').classList.add('active');
@@ -577,7 +584,7 @@
         async function askFestAI(userMessage, roomName) {
             const GEMINI_API_KEY = "AQ.Ab8RN6I4mTTuEpxM8jcECvBEgTVbnu858SaaCu06LMxygzhX6A"; 
             const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-            const systemInstruction = `You are 'Fest AI'. Keep your tone helpful, straightforward, balanced, and friendly. Be clear and concise.`;
+            const strictSystemInstruction = "You are a strict, no-nonsense assistant inside the Fest chat app. Your only job is to respond if the user's message is useful, productive, or important ('kaam ki baat'). If the user is making small talk, gossiping, doing timepass, or saying 'faltu baat', do not engage. In those cases, reply strictly with: 'Please get straight to the point. No timepass.'";
 
             try {
                 const response = await fetch(URL, {
@@ -585,8 +592,8 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: userMessage }] }],
-                        systemInstruction: { parts: [{ text: systemInstruction }] },
-                        generationConfig: { maxOutputTokens: 200, temperature: 0.4 }
+                        systemInstruction: { parts: [{ text: strictSystemInstruction }] },
+                        generationConfig: { maxOutputTokens: 200, temperature: 0.2 }
                     })
                 });
                 const data = await response.json();
@@ -683,4 +690,4 @@
         });
     </script>
 </body>
-  </html>
+</html>
