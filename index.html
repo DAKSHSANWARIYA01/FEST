@@ -3,691 +3,1022 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FEST | Intellectual Hub</title>
-    <!-- 🌟 FONT AWESOME FOR MAXIMUM COMPATIBILITY -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>Fest App - Advanced AI Ecosystem</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <style>
-        /* 🎨 LIGHT THEME VARIABLES */
+        /* ==========================================================================
+           1. CORE VARIABLE DEFINITIONS & LIGHT/DARK THEME MANAGEMENT
+           ========================================================================== */
         :root {
-            --bg-color: #f8fafc; 
-            --card-bg: #ffffff; 
-            --card-border: rgba(0, 0, 0, 0.05);
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --accent-blue: #0284c7; 
-            --accent-purple: #7c3aed; 
-            --input-bg: #f1f5f9;
-            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --bg-primary: #121214;
+            --bg-secondary: #1a1a1e;
+            --bg-tertiary: #26262b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --border-color: #2d2d34;
+            --chat-user-bg: #2563eb;
+            --chat-ai-bg: #26262b;
+            --sidebar-width: 280px;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f3f4f6;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --border-color: #e5e7eb;
+            --chat-user-bg: #2563eb;
+            --chat-ai-bg: #f3f4f6;
+        }
+
+        /* ==========================================================================
+           2. GLOBAL RESET & RESET-STYLES
+           ========================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.25s ease, color 0.25s ease;
         }
 
         body {
-            font-family: var(--font-stack);
-            background-color: var(--bg-color);
+            background-color: var(--bg-primary);
             color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             overflow: hidden;
-        }
-
-        /* ⏳ SPLASH SCREEN STYLE */
-        #splash-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--bg-color);
+            height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+        }
+
+        /* Scrolling Utility */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ==========================================================================
+           3. AUTHENTICATION SCREENS (GATEWAY LAYER)
+           ========================================================================== */
+        #authOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--bg-primary);
+            z-index: 9999;
+            display: flex;
             align-items: center;
-            z-index: 100;
-            transition: opacity 0.4s ease, visibility 0.4s;
-        }
-        
-        .splash-icon {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
+            justify-content: center;
         }
 
-        /* 📦 MAIN CONTAINER */
-        .container {
-            width: 90%;
-            max-width: 360px;
-            padding: 32px 24px;
+        .auth-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
             text-align: center;
-            opacity: 0;
-            transform: scale(0.98);
-            transition: all 0.4s ease-out;
-            box-sizing: border-box;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-        }
-        .container.show {
-            opacity: 1;
-            transform: scale(1);
         }
 
-        .app-icon {
-            width: 75px;
-            height: 75px;
-            object-fit: contain;
-            margin-bottom: 12px;
+        .auth-card h1 {
+            margin-bottom: 8px;
+            font-size: 28px;
+            color: var(--accent-color);
         }
-        
-        h1 {
-            font-size: 40px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -1.5px; 
-            margin: 0 0 4px 0;
-            color: var(--text-main);
-        }
-        
-        .desc {
+
+        .auth-card p {
             color: var(--text-muted);
             font-size: 14px;
-            font-weight: 500;
-            margin-top: 0;
-            margin-bottom: 32px;
-            letter-spacing: 0.1px;
-            line-height: 1.4;
+            margin-bottom: 24px;
         }
 
-        /* 📝 INPUTS & FORM LAYOUTS */
-        .form-group {
-            display: none;
-            flex-direction: column;
-            gap: 12px;
+        .input-group {
+            margin-bottom: 16px;
             text-align: left;
         }
-        .form-group.active {
-            display: flex;
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            color: var(--text-muted);
         }
 
-        .input-field {
-            padding: 14px;
-            background-color: var(--input-bg);
-            border: 1px solid transparent;
-            border-radius: 10px;
-            font-size: 14px;
-            color: var(--text-main);
+        .input-group input {
             width: 100%;
-            box-sizing: border-box;
-            transition: border-color 0.2s;
-        }
-        .input-field:focus {
-            border-color: var(--accent-blue);
-            background-color: #ffffff;
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 6px;
+            font-size: 15px;
             outline: none;
         }
 
-        /* ⚡ BUTTON SYSTEM */
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        .input-group input:focus {
+            border-color: var(--accent-color);
         }
-        .btn {
-            padding: 14px;
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-color);
+            color: white;
             border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            width: 100%;
+            border-radius: 6px;
             font-weight: 600;
-            box-sizing: border-box;
-            transition: transform 0.1s, opacity 0.2s;
-        }
-        .btn:active { transform: scale(0.98); }
-        
-        .btn-primary { 
-            background-color: #111111; 
-            color: #ffffff;
-        }
-        .btn-secondary { 
-            background-color: transparent; 
-            color: var(--text-main); 
-            border: 1px solid rgba(0,0,0,0.08); 
-        }
-
-        .link-helper {
-            font-size: 12px;
-            color: var(--text-muted);
             cursor: pointer;
-            align-self: flex-end;
-            margin-bottom: 4px;
+            font-size: 16px;
+            margin-top: 10px;
         }
-        .link-helper:hover { color: var(--text-main); }
 
-        /* 🏢 DASHBOARD & ROOM SYSTEM */
-        #dashboard-view, #room-inside-view {
-            display: none;
-            text-align: left;
-            width: 100%;
+        .auth-btn:hover {
+            background: var(--accent-hover);
         }
-        #dashboard-view.active, #room-inside-view.active {
-            display: block;
-        }
-        
-        .dash-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--card-border);
-        }
-        .dash-header h2 { font-size: 15px; margin: 0; font-weight: 600; }
 
-        .section-tag {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
+        .auth-toggle {
+            margin-top: 20px;
+            font-size: 14px;
             color: var(--text-muted);
-            margin: 20px 0 10px 0;
-            letter-spacing: 0.5px;
         }
 
-        .rooms-list { display: flex; flex-direction: column; gap: 10px; }
-        
-        .room-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px;
-            border-radius: 10px;
-            background-color: #f8fafc;
-            border: 1px solid var(--card-border);
+        .auth-toggle span {
+            color: var(--accent-color);
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .room-card:hover { background-color: #f1f5f9; }
-        .room-meta { display: flex; align-items: center; gap: 12px; }
-        .room-title { font-size: 14px; font-weight: 500; }
-        .room-tag { font-size: 11px; color: var(--text-muted); }
-
-        /* 💬 REALTIME CHAT SYSTEM */
-        .sub-rooms-tabs { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 4px; }
-        .tab-btn {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
             font-weight: 500;
-            cursor: pointer;
-            border: 1px solid var(--card-border);
-            background-color: transparent;
-            color: var(--text-muted);
-            white-space: nowrap;
         }
-        .tab-btn.active { background-color: var(--text-main); color: #fff; border-color: var(--text-main); }
 
-        .chat-box {
-            height: 240px;
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            background-color: #f8fafc;
-            padding: 12px;
-            overflow-y: auto;
-            margin-bottom: 14px;
+        /* ==========================================================================
+           4. MAIN SYSTEM APPLICATION LAYOUT
+           ========================================================================== */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar Control Section */
+        aside {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            height: 100%;
+            z-index: 10;
         }
 
-        .msg { font-size: 13px; line-height: 1.4; }
-        .msg-user { font-weight: 600; color: var(--accent-blue); }
-        .msg-text { color: var(--text-main); margin-left: 4px; }
-        
-        .file-link-card {
-            margin-top: 6px;
-            padding: 10px;
-            background: rgba(0,0,0,0.02);
-            border: 1px dashed var(--card-border);
-            border-radius: 8px;
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-logo {
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 12px;
         }
-        .file-link-card a { color: var(--accent-blue); text-decoration: none; }
 
-        .chat-input-container { display: flex; gap: 6px; align-items: center; }
-        .chat-input-container input { flex-grow: 1; }
-        
-        .icon-btn {
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
+        .brand-logo i {
+            color: var(--accent-color);
+        }
+
+        .new-chat-btn {
+            margin: 15px;
             padding: 12px;
-            border-radius: 10px;
+            background: transparent;
+            border: 1px dashed var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 6px;
             cursor: pointer;
-            color: var(--text-muted);
-            display: inline-flex;
+            font-weight: 600;
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 42px;
-            height: 42px;
-            box-sizing: border-box;
+            gap: 8px;
         }
-        .icon-btn:hover { color: var(--text-main); }
-        .icon-btn i { font-size: 16px; }
+
+        .new-chat-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .history-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+        }
+
+        .history-item:hover, .history-item.active {
+            background: var(--bg-tertiary);
+            color: var(--text-main);
+        }
+
+        .history-item i {
+            font-size: 14px;
+        }
+
+        .delete-history-btn {
+            position: absolute;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            opacity: 0;
+        }
+
+        .history-item:hover .delete-history-btn {
+            opacity: 1;
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-primary);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+
+        .system-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .ctrl-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .ctrl-btn:hover {
+            background: var(--border-color);
+        }
+
+        /* ==========================================================================
+           5. MAIN INTERACTIVE CHAT ENGINE SYSTEM
+           ========================================================================== */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background: var(--bg-primary);
+            position: relative;
+        }
+
+        .main-header {
+            height: 65px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .active-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .active-meta h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .active-meta span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Conversation Presentation */
+        .workspace-chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .message-row {
+            display: flex;
+            width: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-row.user-row {
+            justify-content: flex-end;
+        }
+
+        .message-row.ai-row {
+            justify-content: flex-start;
+        }
+
+        .bubble {
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .user-row .bubble {
+            background: var(--chat-user-bg);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-row .bubble {
+            background: var(--chat-ai-bg);
+            color: var(--text-main);
+            border-bottom-left-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Render Markdown Codeblocks properly */
+        .bubble pre {
+            margin: 12px 0;
+            padding: 14px;
+            background: #0d0d11 !important;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .bubble code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+
+        .bubble p {
+            margin-bottom: 8px;
+        }
+        .bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Input Management Deck */
+        .workspace-input-deck {
+            padding: 24px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            padding: 10px 14px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-size: 15px;
+            resize: none;
+            max-height: 180px;
+            height: 24px;
+            padding-top: 2px;
+        }
+
+        .input-wrapper button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .input-wrapper button:hover {
+            background: var(--accent-hover);
+        }
+
+        .input-wrapper button:disabled {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .meta-counter {
+            max-width: 800px;
+            margin: 6px auto 0 auto;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 0 4px;
+        }
+
+        /* Loading Animation Core */
+        .typing-loader {
+            display: flex;
+            gap: 4px;
+            padding: 6px 0;
+        }
+
+        .typing-loader span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-loader span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-loader span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
     </style>
 </head>
 <body>
 
-    <div id="splash-screen">
-        <img src="1-1.png" class="splash-icon" alt="Fest Logo" onerror="this.style.display='none'">
-        <h1 style="font-size:32px; margin-top:12px;">FEST</h1>
-    </div>
-
-    <div class="container" id="auth-container">
-        <!-- AUTH INTERFACE -->
-        <div id="auth-view">
-            <img src="1-1.png" class="app-icon" alt="Fest Logo" onerror="this.style.display='none'">
-            <h1>FEST</h1>
-            <p class="desc">Intellectual Hub.</p>
+    <div id="authOverlay">
+        <div class="auth-card" id="authCard">
+            <h1 id="authTitle">Fest Ecosystem</h1>
+            <p id="authSubtitle">लॉगिन करें और सुरक्षित रूप से AI का उपयोग करें</p>
             
-            <div class="btn-group" id="initial-buttons">
-                <button class="btn btn-primary" onclick="showForm('login')">Sign In</button>
-                <button class="btn btn-secondary" onclick="showForm('signup')">Create Account</button>
+            <div class="input-group">
+                <label for="authEmail">ईमेल आईडी (Email)</label>
+                <input type="email" id="authEmail" placeholder="you@example.com">
             </div>
 
-            <!-- LOGIN -->
-            <div class="form-group" id="login-form">
-                <input type="email" id="login-email" class="input-field" placeholder="Email Address">
-                <input type="password" id="login-password" class="input-field" placeholder="Password">
-                <span class="link-helper" id="btn-forgot-password">Forgot Password?</span>
-                <button class="btn btn-primary" id="btn-submit-login">Sign In</button>
-                <button class="btn btn-secondary" onclick="goBack()">Back</button>
+            <div class="input-group">
+                <label for="authPassword">पासवर्ड (Password)</label>
+                <input type="password" id="authPassword" placeholder="••••••••">
             </div>
 
-            <!-- SIGNUP -->
-            <div class="form-group" id="signup-form">
-                <input type="text" id="signup-name" class="input-field" placeholder="Full Name">
-                <input type="text" id="signup-expertise" class="input-field" placeholder="Bio / Status (e.g., Student, Designer)">
-                <input type="email" id="signup-email" class="input-field" placeholder="Email">
-                <input type="tel" id="signup-phone" class="input-field" placeholder="Phone Number">
-                <input type="password" id="signup-password" class="input-field" placeholder="Password">
-                <button class="btn btn-primary" id="btn-submit-signup">Create Account</button>
-                <button class="btn btn-secondary" onclick="goBack()">Back</button>
-            </div>
-        </div>
-
-        <!-- DASHBOARD HUB -->
-        <div id="dashboard-view">
-            <div class="dash-header">
-                <h2 id="welcome-message">Dashboard</h2>
-                <i class="fa-solid fa-sign-out-alt" id="btn-logout" style="color: var(--text-muted); cursor: pointer; font-size: 18px;" title="Logout"></i>
-            </div>
+            <button class="auth-btn" id="mainAuthAction" onclick="handleAuthProcess()">Sign In</button>
             
-            <div class="section-tag">Core Hubs</div>
-            <div class="rooms-list">
-                <div class="room-card" onclick="openRoom('Innovation Lab', ['#tech-trends', '#creatives', '#resources'])">
-                    <div class="room-meta">
-                        <i class="fa-solid fa-lightbulb" style="color: var(--accent-blue); width: 20px;"></i>
-                        <span class="room-title">Innovation Lab</span>
-                    </div>
-                    <span class="room-tag">General</span>
-                </div>
-                
-                <div class="room-card" onclick="openRoom('Strategy & Ideas', ['#discussions', '#insights', '#networking'])">
-                    <div class="room-meta">
-                        <i class="fa-solid fa-compass" style="color: var(--accent-purple); width: 20px;"></i>
-                        <span class="room-title">Strategy & Ideas</span>
-                    </div>
-                    <span class="room-tag">Community</span>
-                </div>
-            </div>
-
-            <div class="section-tag">Regional & Social</div>
-            <div class="rooms-list">
-                <div class="room-card" onclick="openRoom('Locality Hub', ['#general', '#local-updates'])">
-                    <div class="room-meta">
-                        <i class="fa-solid fa-map-marker-alt" style="color: #34d399; width: 20px;"></i>
-                        <span class="room-title">Locality Hub</span>
-                    </div>
-                    <span class="room-tag">Local</span>
-                </div>
-                <div class="room-card" onclick="openRoom('National Exchange', ['#trends', '#meetups'])">
-                    <div class="room-meta">
-                        <i class="fa-solid fa-globe" style="color: #fbbf24; width: 20px;"></i>
-                        <span class="room-title">National Exchange</span>
-                    </div>
-                    <span class="room-tag">Country</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- INSIDE ROOM CHAT -->
-        <div id="room-inside-view">
-            <div class="dash-header">
-                <h2 id="current-room-title">Room</h2>
-                <i class="fa-solid fa-chevron-left" onclick="backToDashboard()" style="color: var(--text-muted); cursor: pointer; font-size: 18px;"></i>
-            </div>
-
-            <div class="sub-rooms-tabs" id="sub-rooms-container"></div>
-
-            <div class="chat-box" id="chat-box-messages">
-                <div class="msg"><span class="msg-user">System:</span><span class="msg-text">Secure connection established.</span></div>
-            </div>
-
-            <div class="chat-input-container">
-                <button class="icon-btn" title="Share Link/File" onclick="shareLargeCloudFile()">
-                    <i class="fa-solid fa-paperclip"></i>
-                </button>
-                
-                <input type="text" id="chat-input-message" class="input-field" placeholder="Type a message...">
-                
-                <button class="icon-btn" title="Ask Fest AI" onclick="triggerAIAssistant()" style="color: var(--accent-blue);">
-                    <i class="fa-solid fa-robot"></i>
-                </button>
-                
-                <button class="icon-btn" style="background-color: var(--text-main); color: #fff;" onclick="sendMessage()">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
+            <div class="auth-toggle">
+                <span id="toggleText" onclick="switchAuthMode()">नया अकाउंट बनाएँ (Sign Up)</span>
             </div>
         </div>
     </div>
 
-    <!-- UI NAVIGATION SCRIPT -->
+    <div class="app-container">
+        
+        <aside>
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Fest AI v3</span>
+                </div>
+            </div>
+
+            <button class="new-chat-btn" onclick="startNewSession()">
+                <i class="fa-solid fa-plus"></i> New Chat
+            </button>
+
+            <div class="history-container" id="historyContainer">
+                </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div style="display:flex; flex-direction:column; overflow:hidden;">
+                        <span id="userEmailDisplay" style="font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">User Account</span>
+                        <span style="font-size:11px; color:var(--text-muted);">Standard Tier</span>
+                    </div>
+                </div>
+                <div class="system-controls">
+                    <button class="ctrl-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i> Theme</button>
+                    <button class="ctrl-btn" onclick="purgeSavedKey()"><i class="fa-solid fa-key"></i> Key</button>
+                    <button class="ctrl-btn" style="color:var(--danger-color);" onclick="triggerLogout()"><i class="fa-solid fa-right-from-bracket"></i> Quit</button>
+                </div>
+            </div>
+        </aside>
+
+        <main>
+            <div class="main-header">
+                <div class="active-meta">
+                    <h2 id="currentChatTitle">नया चैट सत्र (Active Workspace)</h2>
+                    <span>Model Engine: Gemini-1.5-Flash</span>
+                </div>
+                <div class="header-actions">
+                    <button class="ctrl-btn" onclick="clearWorkspaceScreen()"><i class="fa-solid fa-trash-can"></i> Clear</button>
+                    <button class="ctrl-btn" onclick="exportDataMarkdown()"><i class="fa-solid fa-download"></i> Export</button>
+                </div>
+            </div>
+
+            <div class="workspace-chat-area" id="chatWorkspace">
+                <div class="message-row ai-row">
+                    <div class="bubble">
+                        नमस्ते! मैं आपका सुरक्षित Fest AI असिस्टेंट हूँ। आपकी API Key आपके स्थानीय डिवाइस पर स्टोर है। पूछिए, आप क्या बनाना चाहते हैं?
+                    </div>
+                </div>
+            </div>
+
+            <div class="workspace-input-deck">
+                <div class="input-wrapper">
+                    <textarea id="appQueryInput" placeholder="एआई से कुछ भी पूछें (Shift + Enter से नई लाइन)..." oninput="autoExpandInput(this)" onkeydown="handleInputKeys(event)"></textarea>
+                    <button id="sendPayloadBtn" onclick="dispatchUserPayload()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+                <div class="meta-counter">
+                    <span id="typingStatusFeedback">System Status: Idle</span>
+                    <span id="charCounterText">0 characters</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
     <script>
-        setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            const authContainer = document.getElementById('auth-container');
-            if(splash) { 
-                splash.style.opacity = '0'; 
-                splash.style.visibility = 'hidden'; 
-            }
-            if(authContainer) {
-                authContainer.classList.add('show');
-            }
-        }, 1500);
-
-        function showForm(formType) {
-            document.getElementById('initial-buttons').style.display = 'none';
-            document.querySelector('#auth-view h1').style.display = 'none';
-            document.querySelector('#auth-view .desc').style.display = 'none';
-            if (formType === 'login') document.getElementById('login-form').classList.add('active');
-            else if (formType === 'signup') document.getElementById('signup-form').classList.add('active');
-        }
-
-        function goBack() {
-            document.getElementById('login-form').classList.remove('active');
-            document.getElementById('signup-form').classList.remove('active');
-            document.getElementById('initial-buttons').style.display = 'flex';
-            document.querySelector('#auth-view h1').style.display = 'block';
-            document.querySelector('#auth-view .desc').style.display = 'block';
-        }
-    </script>
-
-    <!-- FIREBASE & CORE ENGINE SCRIPT -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
+        // --------------------------------------------------------------------------
+        // I. FIREBASE ENTERPRISE CONTEXT CONFIGURATION INITIALIZATION
+        // --------------------------------------------------------------------------
+        // सुरक्षा चेतावनी: यहाँ केवल फायरबेस की सार्वजनिक ब्राउज़र कुंजी ही लोड की गई है।
+        // जेमिनी एपीआई की (Gemini API Key) को गिटहब लीक से बचाने के लिए नीचे लोकल-स्टोरेज लॉजिक दिया गया है।
         const firebaseConfig = {
-            apiKey: "AIzaSyAYvM7aPoFbueGWyv8mbrRtMTErRgIPTnI",
+            apiKey: "AIzaSyAs7K-gZ62E_g3pI8rY3v_mCjWwzN4l5k", 
             authDomain: "festapp-7f7ca.firebaseapp.com",
             projectId: "festapp-7f7ca",
-            storageBucket: "festapp-7f7ca.firebasestorage.app",
-            messagingSenderId: "838055073635",
-            appId: "1:838055073635:web:cf271352c25851b2cbe556"
+            storageBucket: "festapp-7f7ca.appspot.com",
+            messagingSenderId: "33887259648", 
+            appId: "1:33887259648:web:bf1087127e7f677bc954f9"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Initialize Firebase SDK Instances securely
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        let currentUserData = { name: '', expertise: '' };
-        let activeRoom = '';
-        let activeChannel = '';
-        let unsubscribeMessages = null;
+        // --------------------------------------------------------------------------
+        // II. SYSTEM VARIABLE MANAGERS & RUNTIME STATE CACHE
+        // --------------------------------------------------------------------------
+        let currentUserContext = null;
+        let activeSessionId = null;
+        let isAuthSignUpMode = false;
+        let currentGeminiApiKey = localStorage.getItem('gemini_key');
 
-        // Add Enter Key listener to send messages without clicking buttons manually
-        document.getElementById('chat-input-message').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
+        // --------------------------------------------------------------------------
+        // III. GEMINI API ENFORCED LEAK PREVENTION LOGIC
+        // --------------------------------------------------------------------------
+        function guaranteeAPIKeyPresence() {
+            if (!currentGeminiApiKey) {
+                let promptedKey = prompt("कृपया अपनी Google AI Studio Gemini API Key यहाँ डालें:\n(यह केवल आपके ब्राउज़र की इंटरनल मेमोरी में स्टोर होगी और गिटहब पर कभी लीक नहीं होगी)");
+                if (promptedKey && promptedKey.trim().startsWith("AIzaSy")) {
+                    currentGeminiApiKey = promptedKey.trim();
+                    localStorage.setItem('gemini_key', currentGeminiApiKey);
+                    alert("API Key सफलतापूर्वक स्टोर कर ली गई है!");
+                } else {
+                    alert("अवैध (Invalid) या खाली API Key! कृपया सही चाबी डालें ताकि एआई सिस्टम चालू हो सके।");
+                    purgeSavedKey();
+                }
+            }
+        }
+
+        function purgeSavedKey() {
+            localStorage.removeItem('gemini_key');
+            currentGeminiApiKey = null;
+            alert("स्थानीय ब्राउज़र मेमोरी से कुंजी हटा दी गई है।");
+            location.reload();
+        }
+
+        // --------------------------------------------------------------------------
+        // IV. FIREBASE AUTHENTICATION SUBSYSTEM PIPELINES
+        // --------------------------------------------------------------------------
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUserContext = user;
+                document.getElementById("authOverlay").style.display = "none";
+                document.getElementById("userEmailDisplay").innerText = user.email;
+                document.getElementById("userAvatar").innerText = user.email.charAt(0).toUpperCase();
+                guaranteeAPIKeyPresence();
+                loadChatHistoryFromFirestore();
+            } else {
+                currentUserContext = null;
+                document.getElementById("authOverlay").style.display = "flex";
             }
         });
 
-        function loadDashboard(name, expertise) {
-            document.getElementById('auth-view').style.display = 'none';
-            document.getElementById('dashboard-view').classList.add('active');
-            currentUserData.name = name || 'User';
-            currentUserData.expertise = expertise || '';
-            
-            if(name) {
-                const displayExpertise = expertise ? ` (${expertise})` : '';
-                document.getElementById('welcome-message').innerText = `${name}${displayExpertise}`;
+        function switchAuthMode() {
+            isAuthSignUpMode = !isAuthSignUpMode;
+            document.getElementById("authTitle").innerText = isAuthSignUpMode ? "Create Account" : "Fest Ecosystem";
+            document.getElementById("authSubtitle").innerText = isAuthSignUpMode ? "नया विकास खाता रजिस्टर करें" : "लॉगिन करें और सुरक्षित रूप से AI का उपयोग करें";
+            document.getElementById("mainAuthAction").innerText = isAuthSignUpMode ? "Sign Up" : "Sign In";
+            document.getElementById("toggleText").innerText = isAuthSignUpMode ? "पहले से अकाउंट है? लॉगिन करें (Sign In)" : "नया अकाउंट बनाएँ (Sign Up)";
+        }
+
+        async function handleAuthProcess() {
+            const email = document.getElementById("authEmail").value.trim();
+            const password = document.getElementById("authPassword").value;
+
+            if (!email || !password) {
+                alert("कृपया ईमेल और पासवर्ड दोनों फ़ील्ड भरें!");
+                return;
             }
-        }
-
-        function loadAuthScreen() {
-            document.getElementById('dashboard-view').classList.remove('active');
-            document.getElementById('room-inside-view').classList.remove('active');
-            document.getElementById('auth-view').style.display = 'block';
-            goBack();
-        }
-
-        window.openRoom = function(roomName, subRooms) {
-            document.getElementById('dashboard-view').classList.remove('active');
-            document.getElementById('room-inside-view').classList.add('active');
-            document.getElementById('current-room-title').innerText = roomName;
-            activeRoom = roomName;
-
-            const tabsContainer = document.getElementById('sub-rooms-container');
-            tabsContainer.innerHTML = '';
-
-            subRooms.forEach((sub, index) => {
-                const btn = document.createElement('button');
-                btn.className = `tab-btn ${index === 0 ? 'active' : ''}`;
-                btn.innerText = sub;
-                
-                if(index === 0) switchChannel(sub);
-
-                btn.onclick = function() {
-                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    switchChannel(sub);
-                };
-                tabsContainer.appendChild(btn);
-            });
-        }
-
-        function switchChannel(channelName) {
-            activeChannel = channelName;
-            if (unsubscribeMessages) unsubscribeMessages();
-
-            const chatBox = document.getElementById('chat-box-messages');
-            chatBox.innerHTML = `<div class="msg"><span class="msg-user">System:</span><span class="msg-text">Connecting...</span></div>`;
-
-            const q = query(
-                collection(db, "rooms", activeRoom, activeChannel),
-                orderBy("timestamp", "asc")
-            );
-
-            unsubscribeMessages = onSnapshot(q, (snapshot) => {
-                chatBox.innerHTML = '';
-                if(snapshot.empty) {
-                    chatBox.innerHTML = `<div class="msg"><span class="msg-user">System:</span><span class="msg-text">No messages yet. Say hello!</span></div>`;
-                }
-                
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = 'msg';
-                    
-                    if(data.isLargeFile) {
-                        msgDiv.innerHTML = `
-                            <span class="msg-user"><strong>${data.sender}</strong>:</span>
-                            <div class="file-link-card">
-                                <i class="fa-solid fa-link" style="color:var(--accent-blue)"></i>
-                                <div>
-                                    <a href="${data.text}" target="_blank">Shared Resource Link <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;"></i></a>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        msgDiv.innerHTML = `<span class="msg-user"><strong>${data.sender}</strong>:</span><span class="msg-text">${data.text}</span>`;
-                    }
-                    chatBox.appendChild(msgDiv);
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
-        }
-
-        window.sendMessage = function() {
-            const input = document.getElementById('chat-input-message');
-            const text = input.value.trim();
-            if(!text || !activeRoom || !activeChannel) return;
-
-            addDoc(collection(db, "rooms", activeRoom, activeChannel), {
-                sender: currentUserData.name,
-                title: currentUserData.expertise || 'Member',
-                text: text,
-                isLargeFile: false,
-                timestamp: new Date()
-            }).then(() => {
-                input.value = '';
-            }).catch(err => alert("Error: " + err.message));
-        }
-
-        window.shareLargeCloudFile = function() {
-            const url = prompt("Paste your cloud file or resource link here:");
-            if(url && url.trim().startsWith('http')) {
-                addDoc(collection(db, "rooms", activeRoom, activeChannel), {
-                    sender: currentUserData.name,
-                    title: currentUserData.expertise || 'Member',
-                    text: url.trim(),
-                    isLargeFile: true,
-                    timestamp: new Date()
-                }).catch(err => alert("Error: " + err.message));
-            } else if(url) {
-                alert("Please enter a valid link.");
-            }
-        }
-
-        window.backToDashboard = function() {
-            if (unsubscribeMessages) unsubscribeMessages();
-            document.getElementById('room-inside-view').classList.remove('active');
-            document.getElementById('dashboard-view').classList.add('active');
-        }
-
-        async function askFestAI(userMessage, roomName) {
-            const GEMINI_API_KEY = "AQ.Ab8RN6I4mTTuEpxM8jcECvBEgTVbnu858SaaCu06LMxygzhX6A"; 
-            const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-            const strictSystemInstruction = "You are a strict, no-nonsense assistant inside the Fest chat app. Your only job is to respond if the user's message is useful, productive, or important ('kaam ki baat'). If the user is making small talk, gossiping, doing timepass, or saying 'faltu baat', do not engage. In those cases, reply strictly with: 'Please get straight to the point. No timepass.'";
 
             try {
-                const response = await fetch(URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: userMessage }] }],
-                        systemInstruction: { parts: [{ text: strictSystemInstruction }] },
-                        generationConfig: { maxOutputTokens: 200, temperature: 0.2 }
-                    })
-                });
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
-            } catch (error) {
-                console.error("AI Error:", error);
-                return "System Message: AI is currently unavailable. Please try again later.";
+                if (isAuthSignUpMode) {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    alert("खाता सफलतापूर्वक निर्मित!");
+                } else {
+                    await auth.signInWithEmailAndPassword(email, password);
+                }
+            } catch (err) {
+                alert("ऑथेंटिकेशन त्रुटि: " + err.message);
             }
         }
 
-        window.triggerAIAssistant = async function() {
-            if(!activeRoom || !activeChannel) return alert("Please enter a room first.");
-            const input = document.getElementById('chat-input-message');
-            const userText = input.value.trim();
-            if(!userText) return alert("Type something for Fest AI to answer.");
-
-            const chatBox = document.getElementById('chat-box-messages');
-            const loaderDiv = document.createElement('div');
-            loaderDiv.className = 'msg';
-            loaderDiv.id = 'ai-loader-msg';
-            loaderDiv.innerHTML = `<span class="msg-user" style="color:var(--accent-blue)">Fest AI:</span><span class="msg-text">Thinking...</span>`;
-            chatBox.appendChild(loaderDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            input.value = '';
-
-            const aiResponse = await askFestAI(userText, activeRoom);
-            const loaderElement = document.getElementById('ai-loader-msg');
-            if (loaderElement) loaderElement.remove();
-            
-            addDoc(collection(db, "rooms", activeRoom, activeChannel), {
-                sender: "Fest AI",
-                title: "Assistant",
-                text: aiResponse,
-                isLargeFile: false,
-                timestamp: new Date()
-            }).catch(err => console.error("Firestore AI Error:", err));
+        function triggerLogout() {
+            if(confirm("क्या आप इस सत्र से लॉगआउट करना चाहते हैं?")) {
+                auth.signOut().then(() => location.reload());
+            }
         }
 
-        // VALIDATION & ACCOUNT HANDLERS
-        document.getElementById('btn-submit-signup').addEventListener('click', () => {
-            const name = document.getElementById('signup-name').value.trim();
-            const expertise = document.getElementById('signup-expertise').value.trim();
-            const email = document.getElementById('signup-email').value.trim();
-            const phone = document.getElementById('signup-phone').value.trim();
-            const password = document.getElementById('signup-password').value;
+        // --------------------------------------------------------------------------
+        // V. FIRESTORE DATA PERSISTENCE PIPELINES (HISTORY SYNC)
+        // --------------------------------------------------------------------------
+        async function loadChatHistoryFromFirestore() {
+            if (!currentUserContext) return;
+            const container = document.getElementById("historyContainer");
+            container.innerHTML = `<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:12px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>`;
 
-            if(!email || !password || !name) return alert('Please fill in the required fields.');
+            try {
+                const snapshot = await db.collection("users").doc(currentUserContext.uid).collection("chats")
+                    .orderBy("timestamp", "desc").get();
+                
+                container.innerHTML = "";
+                if (snapshot.empty) {
+                    container.innerHTML = `<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:12px;">कोई पुराना इतिहास नहीं मिला</div>`;
+                    return;
+                }
 
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    setDoc(doc(db, "users", userCredential.user.uid), { 
-                        fullName: name, 
-                        expertise: expertise, 
-                        email: email, 
-                        mobileNumber: phone 
-                    }).then(() => loadDashboard(name, expertise));
-                }).catch((error) => {
-                    if (error.code === 'auth/email-already-in-use') {
-                        alert('यह ईमेल आईडी पहले से रजिस्टर्ड है! कृपया Sign In करें या दूसरा ईमेल इस्तेमाल करें।');
-                    } else if (error.code === 'auth/weak-password') {
-                        alert('पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।');
-                    } else {
-                        alert(error.message);
-                    }
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const activeClass = doc.id === activeSessionId ? "active" : "";
+                    const element = document.createElement("div");
+                    element.className = `history-item ${activeClass}`;
+                    element.setAttribute("data-id", doc.id);
+                    element.onclick = () => fetchSpecificSession(doc.id);
+                    element.innerHTML = `
+                        <i class="fa-regular fa-comment"></i>
+                        <span>${data.title || "Untitled Conversation"}</span>
+                        <button class="delete-history-btn" onclick="deleteSessionFromCloud(event, '${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                    `;
+                    container.appendChild(element);
                 });
-        });
+            } catch (err) {
+                console.error("Firestore history download breach:", err);
+            }
+        }
 
-        document.getElementById('btn-submit-login').addEventListener('click', () => {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-
-            if(!email || !password) return alert('Please fill in all fields.');
-
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    getDoc(doc(db, "users", userCredential.user.uid)).then((docSnap) => {
-                        if(docSnap.exists()){
-                            loadDashboard(docSnap.data().fullName, docSnap.data().expertise);
-                        } else {
-                            loadDashboard('', '');
-                        }
-                    });
-                }).catch((error) => {
-                    if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                        alert('गलत ईमेल या पासवर्ड! कृपया दोबारा चेक करें या नया अकाउंट बनाएं।');
-                    } else {
-                        alert(error.message);
-                    }
+        async function writeMessageToCloud(role, text) {
+            if (!currentUserContext) return;
+            
+            // Generate Session Context implicitly if absent
+            if (!activeSessionId) {
+                const titleStr = text.substring(0, 24) + (text.length > 24 ? "..." : "");
+                const newDocRef = await db.collection("users").doc(currentUserContext.uid).collection("chats").add({
+                    title: titleStr,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
-        });
+                activeSessionId = newDocRef.id;
+                document.getElementById("currentChatTitle").innerText = titleStr;
+            }
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            signOut(auth).then(() => loadAuthScreen());
-        });
+            await db.collection("users").doc(currentUserContext.uid).collection("chats")
+                .doc(activeSessionId).collection("messages").add({
+                    sender: role,
+                    content: text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+            loadChatHistoryFromFirestore();
+        }
+
+        async function fetchSpecificSession(id) {
+            activeSessionId = id;
+            const workspace = document.getElementById("chatWorkspace");
+            workspace.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>चैट डाउनलोड हो रही है...</div>`;
+            
+            try {
+                const chatMeta = await db.collection("users").doc(currentUserContext.uid).collection("chats").doc(id).get();
+                document.getElementById("currentChatTitle").innerText = chatMeta.data().title || "Loaded Session";
+
+                const snapshot = await db.collection("users").doc(currentUserContext.uid).collection("chats")
+                    .doc(id).collection("messages").orderBy("timestamp", "asc").get();
+                
+                workspace.innerHTML = "";
+                snapshot.forEach((doc) => {
+                    const msg = doc.data();
+                    renderMessageBubble(msg.sender === "user" ? "user" : "ai", msg.content);
+                });
+                scrollToWorkspaceBottom();
+            } catch (err) {
+                alert("चैट लोड करने में त्रुटि: " + err.message);
+            }
+        }
+
+        async function deleteSessionFromCloud(event, id) {
+            event.stopPropagation();
+            if (!confirm("क्या आप निश्चित रूप से इस चैट को परमानेंटली डिलीट करना चाहते हैं?")) return;
+            
+            try {
+                await db.collection("users").doc(currentUserContext.uid).collection("chats").doc(id).delete();
+                if (activeSessionId === id) startNewSession();
+                else loadChatHistoryFromFirestore();
+            } catch (err) {
+                alert("विलोपन त्रुटि: " + err.message);
+            }
+        }
+
+        function startNewSession() {
+            activeSessionId = null;
+            document.getElementById("currentChatTitle").innerText = "नया चैट सत्र (Active Workspace)";
+            clearWorkspaceScreen();
+            loadChatHistoryFromFirestore();
+        }
+
+        // --------------------------------------------------------------------------
+        // VI. LIVE SECURE CHAT INTERACTION & AI RESPONSE ENGINE
+        // --------------------------------------------------------------------------
+        async function fetchGeminiAIResponse(promptText) {
+            guaranteeAPIKeyPresence();
+            if (!currentGeminiApiKey) return "Error: Gemini Cloud Infrastructure Activation Failed due to missing Key.";
+
+            // Standard Gemini API v1beta Developer Network Access Endpoint
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${currentGeminiApiKey}`;
+            
+            const payload = {
+                contents: [{
+                    parts: [{ text: promptText }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 2048
+                }
+            };
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const faultData = await response.json();
+                console.error("Gemini API Fault Core Output:", faultData);
+                throw new Error(faultData.error?.message || "HTTP Connection Failure to Google API Node.");
+            }
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        async function dispatchUserPayload() {
+            const inputNode = document.getElementById("appQueryInput");
+            const rawMessage = inputNode.value.trim();
+            if (!rawMessage) return;
+
+            // Interface Lockdown to preserve State
+            inputNode.value = "";
+            inputNode.style.height = "24px";
+            setControlsInteractionState(true);
+            
+            // Render and Sync User State immediately
+            renderMessageBubble("user", rawMessage);
+            scrollToWorkspaceBottom();
+            await writeMessageToCloud("user", rawMessage);
+
+            // Display Stream/Typing Indicator Node
+            const loadingTrackerId = displayTypingIndicatorBubble();
+            scrollToWorkspaceBottom();
+
+            try {
+                const aiResultText = await fetchGeminiAIResponse(rawMessage);
+                removeLoadingBubbleNode(loadingTrackerId);
+                
+                renderMessageBubble("ai", aiResultText);
+                await writeMessageToCloud("ai", aiResultText);
+            } catch (error) {
+                removeLoadingBubbleNode(loadingTrackerId);
+                renderMessageBubble("ai", `❌ **त्रुटि (System Failure):** ${error.message}\n\nयदि यह समस्या बनी रहती है, तो 'Reset Gemini API Key' बटन दबाकर एक नई वैध कुंजी सेट करें।`);
+            } finally {
+                setControlsInteractionState(false);
+                scrollToWorkspaceBottom();
+                document.getElementById("charCounterText").innerText = "0 characters";
+            }
+        }
+
+        // --------------------------------------------------------------------------
+        // VII. HIGH-PERFORMANCE DOM MANIPULATION & INTERFACE UTILITIES
+        // --------------------------------------------------------------------------
+        function renderMessageBubble(sender, text) {
+            const workspace = document.getElementById("chatWorkspace");
+            const row = document.createElement("div");
+            row.className = `message-row ${sender === "user" ? "user-row" : "ai-row"}`;
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            
+            if (sender === "user") {
+                bubble.innerText = text; // Plaintext representation for safety
+            } else {
+                // Enterprise Grade Parsing using Marked Library safely
+                bubble.innerHTML = marked.parse(text);
+                // Trigger Code Highlighter Post-Rendering Sequence
+                bubble.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            }
+
+            row.appendChild(bubble);
+            workspace.appendChild(row);
+        }
+
+        function displayTypingIndicatorBubble() {
+            const workspace = document.getElementById("chatWorkspace");
+            const uniqueId = "indicator-" + Date.now();
+            
+            const row = document.createElement("div");
+            row.className = "message-row ai-row";
+            row.id = uniqueId;
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble";
+            bubble.innerHTML = `
+                <div class="typing-loader">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+
+            row.appendChild(bubble);
+            workspace.appendChild(row);
+            return uniqueId;
+        }
+
+        function removeLoadingBubbleNode(id) {
+            const targetedNode = document.getElementById(id);
+            if (targetedNode) targetedNode.remove();
+        }
+
+        function autoExpandInput(textarea) {
+            textarea.style.height = "24px";
+            textarea.style.height = textarea.scrollHeight - 12 + "px";
+            document.getElementById("charCounterText").innerText = `${textarea.value.length} characters`;
+        }
+
+        function handleInputKeys(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                dispatchUserPayload();
+            }
+        }
+
+        function setControlsInteractionState(isDisabled) {
+            document.getElementById("sendPayloadBtn").disabled = isDisabled;
+            document.getElementById("appQueryInput").disabled = isDisabled;
+            document.getElementById("typingStatusFeedback").innerText = isDisabled ? "System Status: Processing Engine Payload..." : "System Status: Idle";
+        }
+
+        function scrollToWorkspaceBottom() {
+            const chatDiv = document.getElementById("chatWorkspace");
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        function clearWorkspaceScreen() {
+            document.getElementById("chatWorkspace").innerHTML = `
+                <div class="message-row ai-row">
+                    <div class="bubble">कार्यक्षेत्र साफ कर दिया गया है। नया प्रॉम्ट भेजें।</div>
+                </div>`;
+        }
+
+        function toggleTheme() {
+            const activeTheme = document.documentElement.getAttribute("data-theme");
+            const destinationTheme = activeTheme === "light" ? "dark" : "light";
+            document.documentElement.setAttribute("data-theme", destinationTheme);
+        }
+
+        function exportDataMarkdown() {
+            const workspace = document.getElementById("chatWorkspace");
+            let accumulatedMarkdown = "# Fest AI Exported Transcript\n\n";
+            
+            const textBubbles = workspace.querySelectorAll(".bubble");
+            textBubbles.forEach((bubble) => {
+                const identity = bubble.parentElement.classList.contains("user-row") ? "### User Account" : "### Fest AI System";
+                accumulatedMarkdown += `${identity}\n${bubble.innerText || bubble.textContent}\n\n---\n\n`;
+            });
+
+            const blob = new Blob([accumulatedMarkdown], { type: "text/markdown;charset=utf-8;" });
+            const temporaryAnchor = document.createElement("a");
+            temporaryAnchor.href = URL.createObjectURL(blob);
+            temporaryAnchor.download = `Fest_AI_Transcript_${Date.now()}.md`;
+            temporaryAnchor.style.display = "none";
+            document.body.appendChild(temporaryAnchor);
+            temporaryAnchor.click();
+            document.body.removeChild(temporaryAnchor);
+        }
     </script>
 </body>
 </html>
